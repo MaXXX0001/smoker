@@ -1,0 +1,32 @@
+syntax = "proto3";
+
+package advisor.v1;
+
+option go_package = "smoker/pkg/proto/advisor/v1;advisorv1";
+
+import "condition/v1/condition.proto";
+
+// Decision — підсумкове рішення SmokeAdvisor.
+enum Decision {
+  DECISION_UNSPECIFIED = 0;
+  DECISION_GO = 1;   // час на перекур
+  DECISION_WAIT = 2; // краще перечекати
+}
+
+message RecommendRequest {
+  condition.v1.Location location = 1;
+  int64 unix_ts = 2;
+}
+
+message RecommendResponse {
+  Decision decision = 1;
+  int32 total_score = 2;
+  string confidence = 3; // людський опис впевненості
+  repeated condition.v1.Condition reasons = 4; // топ причин для тексту
+  string message = 5; // готовий до відправки текст (Markdown, UA)
+}
+
+// SmokeAdvisor — core domain: агрегує умови провайдерів і видає вердикт.
+service SmokeAdvisor {
+  rpc Recommend(RecommendRequest) returns (RecommendResponse);
+}

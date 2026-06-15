@@ -1,0 +1,45 @@
+syntax = "proto3";
+
+package condition.v1;
+
+option go_package = "smoker/pkg/proto/condition/v1;conditionv1";
+
+// Location — value object: координати місця, для якого оцінюємо умови.
+message Location {
+  double lat = 1;
+  double lon = 2;
+  string name = 3; // людська назва ("Київ")
+  string tz = 4;   // IANA TZ ("Europe/Kyiv")
+}
+
+// Verdict — як умова впливає на рішення вийти на перекур.
+enum Verdict {
+  VERDICT_UNSPECIFIED = 0;
+  VERDICT_FAVORABLE = 1;   // сприяє
+  VERDICT_UNFAVORABLE = 2; // проти
+  VERDICT_NEUTRAL = 3;     // нейтрально/просто цікаво
+}
+
+// Condition — одна оцінена умова (value object).
+message Condition {
+  string code = 1;     // машинний код, напр. "uv_index"
+  string category = 2; // людська категорія, напр. "Природа та космос"
+  Verdict verdict = 3;
+  int32 score = 4;     // вага у підсумку, напр. -3..+3
+  string headline = 5; // смішне пояснення українською
+}
+
+message EvaluateRequest {
+  Location location = 1;
+  int64 unix_ts = 2; // момент оцінки (Unix seconds)
+}
+
+message EvaluateResponse {
+  repeated Condition conditions = 1;
+}
+
+// ConditionProvider — спільний контракт усіх provider-сервісів
+// (cosmos / chronos / chaos). Орхестратор викликає Evaluate у кожного.
+service ConditionProvider {
+  rpc Evaluate(EvaluateRequest) returns (EvaluateResponse);
+}
