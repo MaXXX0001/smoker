@@ -22,11 +22,13 @@ const helpText = `🚬 Привіт! Я підкажу, коли вашій ко
 
 // Register чіпляє всі команди до бота.
 func (a *App) Register(b *bot.Bot) {
-	b.RegisterHandler(bot.HandlerTypeMessageText, "/start", bot.MatchTypeCommand, a.handleStart)
-	b.RegisterHandler(bot.HandlerTypeMessageText, "/smoke", bot.MatchTypeCommand, a.handleSmoke)
-	b.RegisterHandler(bot.HandlerTypeMessageText, "/setlocation", bot.MatchTypeCommand, a.handleSetLocation)
-	b.RegisterHandler(bot.HandlerTypeMessageText, "/setschedule", bot.MatchTypeCommand, a.handleSetSchedule)
-	b.RegisterHandler(bot.HandlerTypeMessageText, "/stop", bot.MatchTypeCommand, a.handleStop)
+	// Патерн — без провідного "/": MatchTypeCommand порівнює голе ім'я команди
+	// (бібліотека зрізає слеш і "@botname" сама).
+	b.RegisterHandler(bot.HandlerTypeMessageText, "start", bot.MatchTypeCommand, a.handleStart)
+	b.RegisterHandler(bot.HandlerTypeMessageText, "smoke", bot.MatchTypeCommand, a.handleSmoke)
+	b.RegisterHandler(bot.HandlerTypeMessageText, "setlocation", bot.MatchTypeCommand, a.handleSetLocation)
+	b.RegisterHandler(bot.HandlerTypeMessageText, "setschedule", bot.MatchTypeCommand, a.handleSetSchedule)
+	b.RegisterHandler(bot.HandlerTypeMessageText, "stop", bot.MatchTypeCommand, a.handleStop)
 }
 
 func (a *App) reply(ctx context.Context, b *bot.Bot, chatID int64, text string) {

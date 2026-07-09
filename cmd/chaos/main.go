@@ -19,9 +19,9 @@ func main() {
 	hc := httpx.New()
 	srv := provider.NewServer(log,
 		infra.NewDiceSource(),
-		infra.NewDadJokeSource(),
-		infra.NewChuckSource(hc),
-		infra.NewCatFactSource(hc),
+		infra.NewJokeSource(),
+		infra.NewCatFactSource(),
+		infra.NewOracleSource(hc),
 	)
 
 	if err := grpcx.Serve(addr, log, func(g *grpc.Server) {

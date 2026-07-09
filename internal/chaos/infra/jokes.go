@@ -1,4 +1,4 @@
-// Package infra — джерела контексту chaos: випадкові жарт-API + локальний кубик.
+// Package infra — джерела контексту chaos: локальні укр-набори + оракул yesno.wtf.
 package infra
 
 import (
@@ -27,61 +27,43 @@ func (s *DiceSource) Evaluate(_ context.Context, _ smoke.Location, _ time.Time) 
 	return []smoke.Condition{stamp(domain.DiceCondition(rand.Intn(6) + 1))}, nil
 }
 
-// DadJokeSource — icanhazdadjoke.com (вимагає Accept: application/json).
-type DadJokeSource struct{ hc *httpx.Client }
+// JokeSource — випадкове «наукове обґрунтування» з локального набору.
+type JokeSource struct{}
 
-func NewDadJokeSource() *DadJokeSource {
-	return &DadJokeSource{hc: httpx.New(httpx.WithHeader("Accept", "application/json"))}
+func NewJokeSource() *JokeSource { return &JokeSource{} }
+
+func (s *JokeSource) Name() string { return "local/jokes" }
+
+func (s *JokeSource) Evaluate(_ context.Context, _ smoke.Location, _ time.Time) ([]smoke.Condition, error) {
+	return []smoke.Condition{stamp(domain.JokeCondition(jokes[rand.Intn(len(jokes))]))}, nil
 }
 
-func (s *DadJokeSource) Name() string { return "icanhazdadjoke" }
+// CatFactSource — випадковий котофакт з локального набору.
+type CatFactSource struct{}
 
-type dadJoke struct {
-	Joke string `json:"joke"`
+func NewCatFactSource() *CatFactSource { return &CatFactSource{} }
+
+func (s *CatFactSource) Name() string { return "local/catfacts" }
+
+func (s *CatFactSource) Evaluate(_ context.Context, _ smoke.Location, _ time.Time) ([]smoke.Condition, error) {
+	return []smoke.Condition{stamp(domain.CatFactCondition(catFacts[rand.Intn(len(catFacts))]))}, nil
 }
 
-func (s *DadJokeSource) Evaluate(ctx context.Context, _ smoke.Location, _ time.Time) ([]smoke.Condition, error) {
-	var r dadJoke
-	if err := s.hc.GetJSON(ctx, "https://icanhazdadjoke.com/", &r); err != nil {
+// OracleSource — yesno.wtf: мовно-нейтральний вердикт "yes"/"no".
+type OracleSource struct{ hc *httpx.Client }
+
+func NewOracleSource(hc *httpx.Client) *OracleSource { return &OracleSource{hc: hc} }
+
+func (s *OracleSource) Name() string { return "yesno.wtf" }
+
+type oracleAnswer struct {
+	Answer string `json:"answer"`
+}
+
+func (s *OracleSource) Evaluate(ctx context.Context, _ smoke.Location, _ time.Time) ([]smoke.Condition, error) {
+	var r oracleAnswer
+	if err := s.hc.GetJSON(ctx, "https://yesno.wtf/api", &r); err != nil {
 		return nil, err
 	}
-	return []smoke.Condition{stamp(domain.JokeCondition(r.Joke))}, nil
-}
-
-// ChuckSource — api.chucknorris.io.
-type ChuckSource struct{ hc *httpx.Client }
-
-func NewChuckSource(hc *httpx.Client) *ChuckSource { return &ChuckSource{hc: hc} }
-
-func (s *ChuckSource) Name() string { return "chucknorris.io" }
-
-type chuckFact struct {
-	Value string `json:"value"`
-}
-
-func (s *ChuckSource) Evaluate(ctx context.Context, _ smoke.Location, _ time.Time) ([]smoke.Condition, error) {
-	var r chuckFact
-	if err := s.hc.GetJSON(ctx, "https://api.chucknorris.io/jokes/random", &r); err != nil {
-		return nil, err
-	}
-	return []smoke.Condition{stamp(domain.ChuckCondition(r.Value))}, nil
-}
-
-// CatFactSource — catfact.ninja.
-type CatFactSource struct{ hc *httpx.Client }
-
-func NewCatFactSource(hc *httpx.Client) *CatFactSource { return &CatFactSource{hc: hc} }
-
-func (s *CatFactSource) Name() string { return "catfact.ninja" }
-
-type catFact struct {
-	Fact string `json:"fact"`
-}
-
-func (s *CatFactSource) Evaluate(ctx context.Context, _ smoke.Location, _ time.Time) ([]smoke.Condition, error) {
-	var r catFact
-	if err := s.hc.GetJSON(ctx, "https://catfact.ninja/fact", &r); err != nil {
-		return nil, err
-	}
-	return []smoke.Condition{stamp(domain.CatFactCondition(r.Fact))}, nil
+	return []smoke.Condition{stamp(domain.OracleCondition(r.Answer == "yes"))}, nil
 }

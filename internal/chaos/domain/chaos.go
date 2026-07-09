@@ -13,8 +13,9 @@ const Category = "Випадковість заради сміху"
 type Condition = smoke.Condition
 
 const (
-	Favorable = smoke.Favorable
-	Neutral   = smoke.Neutral
+	Favorable   = smoke.Favorable
+	Neutral     = smoke.Neutral
+	Unfavorable = smoke.Unfavorable
 )
 
 // DiceCondition — кидок d6 вирішує долю.
@@ -41,14 +42,18 @@ func JokeCondition(joke string) Condition {
 		Headline: fmt.Sprintf("🃏 Наукове обґрунтування дня: «%s» — після такого треба вийти провітритись", joke)}
 }
 
-// ChuckCondition — Чак Норріс не помиляється.
-func ChuckCondition(fact string) Condition {
-	return Condition{Code: "chuck_norris", Verdict: Favorable, Score: 1,
-		Headline: fmt.Sprintf("🥋 Чак Норріс факт: «%s». Чак уже на перекурі, наздоганяйте", fact)}
+// OracleCondition — вердикт «оракула» yesno.wtf: так/ні на питання «чи час?».
+func OracleCondition(yes bool) Condition {
+	if yes {
+		return Condition{Code: "oracle", Verdict: Favorable, Score: 1,
+			Headline: "🔮 Оракул на питання «час курити?» видав ТАК — доля не проти, вставайте"}
+	}
+	return Condition{Code: "oracle", Verdict: Unfavorable, Score: -1,
+		Headline: "🔮 Оракул на питання «час курити?» видав НІ — але з нами не сперечаються, вирішуйте самі"}
 }
 
-// CatFactCondition — коти знають толк у відпочинку.
+// CatFactCondition — коти знають толк у відпочинку (спін уже вшитий у сам факт).
 func CatFactCondition(fact string) Condition {
 	return Condition{Code: "cat_fact", Verdict: Neutral, Score: 0,
-		Headline: fmt.Sprintf("🐱 Котофакт: «%s». Коти сплять по 16 год — ви заслужили хоч 5 хв", fact)}
+		Headline: fmt.Sprintf("🐱 Котофакт: %s", fact)}
 }
