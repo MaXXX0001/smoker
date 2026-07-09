@@ -23,12 +23,14 @@ const helpText = `🚬 Привіт! Я підкажу, коли вашій ко
 // Register чіпляє всі команди до бота.
 func (a *App) Register(b *bot.Bot) {
 	// Патерн — без провідного "/": MatchTypeCommand порівнює голе ім'я команди
-	// (бібліотека зрізає слеш і "@botname" сама).
-	b.RegisterHandler(bot.HandlerTypeMessageText, "start", bot.MatchTypeCommand, a.handleStart)
+	// (бібліотека зрізає слеш і "@botname" сама). onlyAdmin — команди лише від
+	// дозволених user ID (ADMIN_IDS). /smoke — відкрита для всіх, керівні —
+	// лише адмінам.
 	b.RegisterHandler(bot.HandlerTypeMessageText, "smoke", bot.MatchTypeCommand, a.handleSmoke)
-	b.RegisterHandler(bot.HandlerTypeMessageText, "setlocation", bot.MatchTypeCommand, a.handleSetLocation)
-	b.RegisterHandler(bot.HandlerTypeMessageText, "setschedule", bot.MatchTypeCommand, a.handleSetSchedule)
-	b.RegisterHandler(bot.HandlerTypeMessageText, "stop", bot.MatchTypeCommand, a.handleStop)
+	b.RegisterHandler(bot.HandlerTypeMessageText, "start", bot.MatchTypeCommand, a.handleStart, a.onlyAdmin)
+	b.RegisterHandler(bot.HandlerTypeMessageText, "setlocation", bot.MatchTypeCommand, a.handleSetLocation, a.onlyAdmin)
+	b.RegisterHandler(bot.HandlerTypeMessageText, "setschedule", bot.MatchTypeCommand, a.handleSetSchedule, a.onlyAdmin)
+	b.RegisterHandler(bot.HandlerTypeMessageText, "stop", bot.MatchTypeCommand, a.handleStop, a.onlyAdmin)
 }
 
 func (a *App) reply(ctx context.Context, b *bot.Bot, chatID int64, text string) {

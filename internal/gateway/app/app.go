@@ -2,9 +2,9 @@
 package app
 
 import (
+	"log/slog"
 	"smoker/internal/gateway/infra"
 	"smoker/internal/gateway/store"
-	"log/slog"
 )
 
 // Defaults — дефолтні налаштування для нових чатів і вікно робочих годин.
@@ -20,9 +20,10 @@ type Defaults struct {
 
 // App — спільні залежності хендлерів і планувальника.
 type App struct {
-	Store   *store.Store
-	Geo     *infra.Geocoder
-	Advisor *infra.AdvisorClient
-	Log     *slog.Logger
-	Def     Defaults
+	Store    *store.Store
+	Geo      *infra.Geocoder
+	Advisor  *infra.AdvisorClient
+	Log      *slog.Logger
+	Def      Defaults
+	AdminIDs []int64 // хто може керувати ботом; порожньо = всі
 }

@@ -51,6 +51,7 @@ services:
       args: { SERVICE: gateway }
     environment:
       TELEGRAM_TOKEN: ${TELEGRAM_TOKEN:?задайте TELEGRAM_TOKEN у .env}
+      ADMIN_IDS: ${ADMIN_IDS:-}
       DB_PATH: /data/smoker.db
       ORCHESTRATOR_ADDR: orchestrator:9100
       DEFAULT_PLACE: ${DEFAULT_PLACE:-Київ}

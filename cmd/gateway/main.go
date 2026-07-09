@@ -6,6 +6,8 @@ import (
 	"context"
 	"os"
 	"os/signal"
+	"strconv"
+	"strings"
 	"syscall"
 
 	"smoker/internal/gateway/app"
@@ -17,6 +19,20 @@ import (
 	"github.com/go-telegram/bot"
 )
 
+// parseIDs розбирає "123,456" у список Telegram user ID; порожнє = nil (усі).
+func parseIDs(s string) []int64 {
+	var out []int64
+	for _, p := range strings.Split(s, ",") {
+		if p = strings.TrimSpace(p); p == "" {
+			continue
+		}
+		if id, err := strconv.ParseInt(p, 10, 64); err == nil {
+			out = append(out, id)
+		}
+	}
+	return out
+}
+
 func main() {
 	log := env.Logger("gateway")
 
@@ -27,6 +43,7 @@ func main() {
 	}
 	dbPath := env.String("DB_PATH", "smoker.db")
 	orchAddr := env.String("ORCHESTRATOR_ADDR", "localhost:9100")
+	adminIDs := parseIDs(env.String("ADMIN_IDS", ""))
 
 	defaults := app.Defaults{
 		Lat:       env.Float("DEFAULT_LAT", 50.4501),
@@ -59,11 +76,12 @@ func main() {
 	geo := infra.NewGeocoder(httpx.New(), env.String("WIKI_LANG", "uk"))
 
 	application := &app.App{
-		Store:   st,
-		Geo:     geo,
-		Advisor: advisor,
-		Log:     log,
-		Def:     defaults,
+		Store:    st,
+		Geo:      geo,
+		Advisor:  advisor,
+		Log:      log,
+		Def:      defaults,
+		AdminIDs: adminIDs,
 	}
 
 	b, err := bot.New(token)
