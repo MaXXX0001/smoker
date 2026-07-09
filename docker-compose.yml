@@ -1,21 +1,8 @@
-# Піднімає весь "smoker": 3 provider-сервіси + orchestrator + gateway + postgres.
+# Піднімає весь "smoker": 3 provider-сервіси + orchestrator + gateway.
+# Стан gateway — SQLite-файл у volume smokerdata (окрема БД не потрібна).
 # Перед запуском створіть .env з TELEGRAM_TOKEN (див. .env.example).
 
 services:
-  postgres:
-    image: postgres:16-alpine
-    environment:
-      POSTGRES_USER: smoker
-      POSTGRES_PASSWORD: smoker
-      POSTGRES_DB: smoker
-    volumes:
-      - pgdata:/var/lib/postgresql/data
-    healthcheck:
-      test: ["CMD-SHELL", "pg_isready -U smoker -d smoker"]
-      interval: 5s
-      timeout: 3s
-      retries: 10
-
   cosmos:
     build:
       context: .
@@ -64,7 +51,7 @@ services:
       args: { SERVICE: gateway }
     environment:
       TELEGRAM_TOKEN: ${TELEGRAM_TOKEN:?задайте TELEGRAM_TOKEN у .env}
-      DATABASE_URL: postgres://smoker:smoker@postgres:5432/smoker?sslmode=disable
+      DB_PATH: /data/smoker.db
       ORCHESTRATOR_ADDR: orchestrator:9100
       DEFAULT_PLACE: ${DEFAULT_PLACE:-Київ}
       DEFAULT_LAT: ${DEFAULT_LAT:-50.4501}
@@ -75,12 +62,12 @@ services:
       WORK_END_HOUR: ${WORK_END_HOUR:-19}
       WIKI_LANG: ${WIKI_LANG:-uk}
       LOG_LEVEL: ${LOG_LEVEL:-info}
+    volumes:
+      - smokerdata:/data
     depends_on:
-      postgres:
-        condition: service_healthy
       orchestrator:
         condition: service_started
     restart: unless-stopped
 
 volumes:
-  pgdata:
+  smokerdata:

@@ -25,7 +25,7 @@ func main() {
 		log.Error("TELEGRAM_TOKEN не заданий")
 		os.Exit(1)
 	}
-	dsn := env.String("DATABASE_URL", "postgres://smoker:smoker@localhost:5432/smoker?sslmode=disable")
+	dbPath := env.String("DB_PATH", "smoker.db")
 	orchAddr := env.String("ORCHESTRATOR_ADDR", "localhost:9100")
 
 	defaults := app.Defaults{
@@ -41,7 +41,7 @@ func main() {
 	ctx, stop := signal.NotifyContext(context.Background(), syscall.SIGINT, syscall.SIGTERM)
 	defer stop()
 
-	st, err := store.Open(ctx, dsn)
+	st, err := store.Open(ctx, dbPath)
 	if err != nil {
 		log.Error("БД недоступна", "err", err)
 		os.Exit(1)
