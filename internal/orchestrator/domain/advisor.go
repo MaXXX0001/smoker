@@ -3,7 +3,7 @@
 package domain
 
 import (
-	"sort"
+	"math/rand"
 
 	"smoker/pkg/smoke"
 )
@@ -11,12 +11,9 @@ import (
 // maxReasons — скільки причин показуємо в повідомленні.
 const maxReasons = 4
 
-// minReasons — мінімум причин, які намагаємось показати.
-const minReasons = 3
-
 // Decide — серце домену: підсумовує ваги умов і вирішує GO/WAIT.
-// Поріг: TotalScore >= 0 → GO. Причини сортуються так, щоб найрелевантніші до
-// рішення (сприятливі для GO / несприятливі для WAIT) йшли першими.
+// Поріг: TotalScore >= 0 → GO. Причини для показу обираються випадково —
+// щоб повідомлення щоразу було різне (вердикт рахується з усіх умов).
 func Decide(conditions []smoke.Condition) smoke.Recommendation {
 	total := 0
 	for _, c := range conditions {
@@ -32,35 +29,23 @@ func Decide(conditions []smoke.Condition) smoke.Recommendation {
 		Decision:   decision,
 		TotalScore: total,
 		Confidence: confidence(total),
-		Reasons:    pickReasons(conditions, decision),
+		Reasons:    pickReasons(conditions),
 	}
 }
 
-// pickReasons обирає найвиразніші причини під рішення.
-func pickReasons(conditions []smoke.Condition, decision smoke.Decision) []smoke.Condition {
-	sorted := make([]smoke.Condition, len(conditions))
-	copy(sorted, conditions)
-
-	// "Вага релевантності": для GO вище — краще, для WAIT навпаки.
-	weight := func(c smoke.Condition) int {
-		if decision == smoke.Go {
-			return c.Score
-		}
-		return -c.Score
-	}
-	sort.SliceStable(sorted, func(i, j int) bool {
-		return weight(sorted[i]) > weight(sorted[j])
+// pickReasons бере до maxReasons ВИПАДКОВИХ умов — щоб причини щоразу різнились.
+func pickReasons(conditions []smoke.Condition) []smoke.Condition {
+	shuffled := make([]smoke.Condition, len(conditions))
+	copy(shuffled, conditions)
+	rand.Shuffle(len(shuffled), func(i, j int) {
+		shuffled[i], shuffled[j] = shuffled[j], shuffled[i]
 	})
 
 	n := maxReasons
-	if n > len(sorted) {
-		n = len(sorted)
+	if n > len(shuffled) {
+		n = len(shuffled)
 	}
-	// Якщо релевантних мало — все одно віддаємо хоча б minReasons (із нейтральних).
-	if n < minReasons && len(sorted) >= minReasons {
-		n = minReasons
-	}
-	return sorted[:n]
+	return shuffled[:n]
 }
 
 // confidence — людський опис впевненості за модулем підсумку.

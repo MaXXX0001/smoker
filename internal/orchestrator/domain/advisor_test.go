@@ -42,26 +42,37 @@ func TestDecideZeroIsGo(t *testing.T) {
 	}
 }
 
-func TestPickReasonsOrdersByRelevance(t *testing.T) {
-	// Для GO найсприятливіша умова має йти першою.
-	rec := Decide([]smoke.Condition{
+func TestPickReasonsAreFromInput(t *testing.T) {
+	// Причини обираються випадково, але завжди мають бути підмножиною вхідних умов.
+	in := []smoke.Condition{
 		cond(0, smoke.Neutral, "neutral"),
 		cond(2, smoke.Favorable, "best"),
 		cond(1, smoke.Favorable, "good"),
-	})
-	if rec.Reasons[0].Headline != "best" {
-		t.Fatalf("перша причина для GO має бути 'best', отримав %q", rec.Reasons[0].Headline)
+	}
+	valid := map[string]bool{"neutral": true, "best": true, "good": true}
+	rec := Decide(in)
+	if len(rec.Reasons) != len(in) { // 3 < maxReasons → повертаємо всі
+		t.Fatalf("очікував %d причин, отримав %d", len(in), len(rec.Reasons))
+	}
+	for _, r := range rec.Reasons {
+		if !valid[r.Headline] {
+			t.Fatalf("причина %q не з вхідного набору", r.Headline)
+		}
 	}
 }
 
-func TestPickReasonsForWaitSurfacesNegatives(t *testing.T) {
-	rec := Decide([]smoke.Condition{
-		cond(1, smoke.Favorable, "sun"),
-		cond(-2, smoke.Unfavorable, "storm"),
-		cond(0, smoke.Neutral, "meh"),
-	})
-	if rec.Reasons[0].Headline != "storm" {
-		t.Fatalf("для WAIT першою має бути 'storm', отримав %q", rec.Reasons[0].Headline)
+func TestPickReasonsNoDuplicates(t *testing.T) {
+	var cs []smoke.Condition
+	for i := 0; i < 10; i++ {
+		cs = append(cs, cond(1, smoke.Favorable, string(rune('a'+i))))
+	}
+	rec := Decide(cs)
+	seen := map[string]bool{}
+	for _, r := range rec.Reasons {
+		if seen[r.Headline] {
+			t.Fatalf("причина %q повторюється", r.Headline)
+		}
+		seen[r.Headline] = true
 	}
 }
 

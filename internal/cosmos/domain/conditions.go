@@ -3,9 +3,16 @@ package domain
 import (
 	"fmt"
 	"math"
+	"math/rand"
 
 	"smoker/pkg/smoke"
 )
+
+// pickf обирає випадковий формат-рядок і підставляє значення — щоб умова
+// з одним і тим самим діапазоном не звучала щоразу однаково.
+func pickf(v float64, variants []string) string {
+	return fmt.Sprintf(variants[rand.Intn(len(variants))], v)
+}
 
 // Category — назва bounded context для всіх умов cosmos.
 const Category = "Природа та космос"
@@ -65,17 +72,42 @@ func WindCondition(speed, deg float64) Condition {
 }
 
 // PressureCondition — атмосферний тиск як "медичне показання".
+var (
+	lowPressurePhrases = []string{
+		"🌧️ Тиск %.0f гПа — падає, тіло вимагає компенсації нікотином, майже рецепт",
+		"🌧️ Тиск %.0f гПа — низький, метеозалежні вже тягнуться по цигарку, приєднуйтесь",
+		"🌪️ Тиск %.0f гПа — просів, організм у режимі енергозбереження, підзарядка перекуром показана",
+		"🌫️ Тиск %.0f гПа — впав, погода тисне, треба вийти зрівняти внутрішній барометр",
+		"☔ Тиск %.0f гПа — нижче норми, класична відмазка «мене погода зламала», користуйтесь",
+		"🌧️ Тиск %.0f гПа — низький, кава вже не бере, а перекур — саме те",
+	}
+	highPressurePhrases = []string{
+		"🗻 Тиск %.0f гПа — височенний, голова ясна, рішення про перекур зважене",
+		"🏔️ Тиск %.0f гПа — антициклон, дихається легко, гріх не вийти ще й надвір",
+		"☀️ Тиск %.0f гПа — високий, самопочуття бадьоре, перекур буде особливо смачний",
+		"🗻 Тиск %.0f гПа — тисне згори, але приємно, ідеально щоб постояти на вулиці",
+		"🌤️ Тиск %.0f гПа — високий і стабільний, як і твоє бажання зробити паузу",
+	}
+	normalPressurePhrases = []string{
+		"🌡️ Тиск %.0f гПа — норма, організм не проти",
+		"🌡️ Тиск %.0f гПа — рівний, жодних відмазок від тіла, але й заперечень нема",
+		"🌡️ Тиск %.0f гПа — в нормі, погода нейтральна, рішення суто за тобою",
+		"🌡️ Тиск %.0f гПа — стабільний, барометр спокійний, будь таким і ти",
+		"🌡️ Тиск %.0f гПа — комфортний, ні за, ні проти, чиста свобода вибору",
+	}
+)
+
 func PressureCondition(hPa float64) Condition {
 	switch {
 	case hPa < 1005:
 		return Condition{Code: "pressure", Verdict: Favorable, Score: 1,
-			Headline: fmt.Sprintf("🌧️ Тиск %.0f гПа — падає, тіло вимагає компенсації нікотином, майже рецепт", hPa)}
+			Headline: pickf(hPa, lowPressurePhrases)}
 	case hPa > 1028:
 		return Condition{Code: "pressure", Verdict: Neutral, Score: 0,
-			Headline: fmt.Sprintf("🗻 Тиск %.0f гПа — височенний, голова ясна, рішення про перекур зважене", hPa)}
+			Headline: pickf(hPa, highPressurePhrases)}
 	default:
 		return Condition{Code: "pressure", Verdict: Neutral, Score: 0,
-			Headline: fmt.Sprintf("🌡️ Тиск %.0f гПа — норма, організм не проти", hPa)}
+			Headline: pickf(hPa, normalPressurePhrases)}
 	}
 }
 
